@@ -10,6 +10,11 @@ contract DepositorAddress
     event IntegerUpdated(address indexed _address, uint256 _newValue);
     event AddressAdded(address);
 
+    function setInteger(address _address, uint256 _value) external {
+        addressToInteger[_address] += _value;
+        emit IntegerUpdated(_address, _value);
+    }
+
     function addAddress(address _address, uint256 _initialValue) external 
     {
       require(addressToInteger[_address] == 0, "Address already exists in mapping");
