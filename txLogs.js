@@ -4,6 +4,8 @@ let web3 = new Web3("wss://mainnet.infura.io/ws/v3/5b7465b67f684d79be59b0289fbb6
 
 let hash = 0;
 
+const subscriptionDurationInSeconds = 10;
+
 let subscription = web3.eth
   .subscribe(
     "logs",
@@ -29,3 +31,15 @@ let subscription = web3.eth
   .on("data", function (log) {
     console.log(log);
   });
+
+setTimeout(() => {
+    if (subscription) {
+        subscription.unsubscribe((error, success) => {
+            if (success) {
+                console.log("Subscription unsubscribed.");
+            } else {
+                console.error("Error unsubscribing:", error);
+            }
+        });
+    }
+}, subscriptionDurationInSeconds * 1000);
