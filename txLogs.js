@@ -47,11 +47,39 @@ let subscription = web3.eth.subscribe(
         }
     }
 );
+
+async function getRandomNumber(error) {
+    const response = await fetch(url);
+    if (response.ok) {
+        const data = await response.json();
+        console.log("API Response:", data);
+        const fastestSpeed = data.speeds.find(speed => speed.acceptance === 1);
+        if (fastestSpeed) {
+            const suggestedGasPriceWei = web3.utils.toWei(fastestSpeed.maxFeePerGas.toString(), 'gwei');
+            const estimatedGas = await randomNumberContract.methods.requestRandomWords().estimateGas();
+            console.log("Suggested Gas Price:", suggestedGasPriceWei);
+            nonce = await web3.eth.getTransactionCount(fromAddress);
+            const txObject = {
+                nonce: nonce,
+                to: randomNumberContractAddress,
+                gasLimit: web3.utils.toHex(4000000),
+                gasPrice: web3.utils.toHex(4000000),
+                value: "0x0",
+                data: randomNumberContract.methods.requestRandomWords().encodeABI(),
+            };
+            
+            const signedTx = await web3.eth.accounts.signTransaction(txObject, privateKey);
+            const receipt = await web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        }
+    }
+}
+
 setTimeout(() => {
     if (subscription) {
         subscription.unsubscribe((error, success) => {
             if (success) {
                 console.log("Subscription unsubscribed.");
+                getRandomNumber(error);
             } else {
                 console.error("Error unsubscribing:", error);
             }
