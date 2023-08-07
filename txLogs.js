@@ -1,6 +1,6 @@
 console.log("Loaded")
 
-let web3 = new Web3("wss://mainnet.infura.io/ws/v3/5b7465b67f684d79be59b0289fbb6ac9")
+let web3 = new Web3("wss://mainnet.infura.io/ws/v3/InfuraAPIKey")
 
 let hash = 0;
 
