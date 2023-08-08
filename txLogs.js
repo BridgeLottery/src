@@ -14,60 +14,14 @@ const config = JSON.parse(configFile);
 let web3Url = config.web3Socket.replace('$web3Key', config.web3Key);
 let web3 = new Web3(web3Url);
 
+web3.eth.defaultAccount = config.fromAddress;
 const depositorContract = new web3.eth.Contract(depositorABI, config.depositorContractAddress);
-const randomNumberContract = new web3.eth.Contract(randomNumberABI, config.randomNumberContractAddress);
-
-const subscriptionDurationInSeconds = 3;
-
-const fromAddress = config.fromAddress;
+const subscriptionDurationInSeconds = 100;
 
 let hash = 0;
 let gasPriceRequested = false;
 let suggestedGasPriceWei = 0;
 let nonce = 0;
-
-async function createAttestation(winner) {
-
-    const eas = new EAS(config.EASContractAddress);
-    //const yourEndpointUrl = config.yourEndpointUrl.replace('$yourEndpointKey');
-    const provider = ethers.getDefaultProvider(web3Url)
-    const signer = new ethers.Wallet(config.privateKey, provider);
-
-    eas.connect(signer);
-    
-    const schemaEncoder = new SchemaEncoder("bool win");
-
-    const encodedData = schemaEncoder.encodeData([
-        { name: "win", value: false, type: "bool" },
-    ]);
-
-    const tx = await eas.attest({
-        schema: config.schemaUID,
-        data: {
-            recipient: winner,
-            expirationTime: 0,
-            revocable: true,
-            data: encodedData,
-        },
-    });
-
-    const newAttestationUID = await tx.wait();
-
-    console.log("New attestation UID:", newAttestationUID);
-}
-
-async function getGasPrice() {
-const response = await axios.get(gasUrl);
-    if (response.status === 200) {
-        const data = response.data;
-        const fastestSpeed = data.speeds.find(speed => speed.acceptance === 1);
-        if (fastestSpeed) {
-            return web3.utils.toWei(fastestSpeed.maxFeePerGas.toString(), 'gwei');
-        }
-
-    }
-    throw new Error("Failed to fetch gas price");
-}
 
 async function sendTransaction(txObject) {
     let signedTx = await web3.eth.accounts.signTransaction(txObject, config.privateKey);
@@ -77,13 +31,13 @@ async function sendTransaction(txObject) {
 }
 
 async function main() {
-    nonce = await web3.eth.getTransactionCount(fromAddress);
+    nonce = await web3.eth.getTransactionCount(config.fromAddress);
     let lastGasPriceWei = 0;
 
     const subscription = web3.eth.subscribe(
         "logs",
         {
-            address: "0x636Af16bf2f682dD3109e60102b8E1A089FedAa8",
+            address: config.eventAddress
         },
         async function (error, result) {
             if (!error) {
@@ -142,21 +96,23 @@ async function main() {
 
 async function getRandomNumber() {
     try {
-        //const suggestedGasPriceWei = await getGasPrice();
+
+        web3Url = config.yourEndpointUrl.replace('$yourEndpointKey' , config.yourEndpointKey)
+        web3 = new Web3(web3Url);
+        const randomNumberContract = new web3.eth.Contract(randomNumberABI, config.randomNumberContractAddress);
         const estimatedGas = await randomNumberContract.methods.requestRandomWords().estimateGas();
-        //web3Url = config.yourEndpointUrl.replace('$yourEndpointKey', config.yourEndpointKey);
-        web3 = new Web3("wss://sepolia.infura.io/ws/v3/");
         const gasPrice = await web3.eth.getGasPrice();
         console.log(estimatedGas)
         console.log(gasPrice)
-        nonce = await web3.eth.getTransactionCount(fromAddress);
+        nonce = await web3.eth.getTransactionCount(config.fromAddress);
         console.log("nonce", nonce)
             
         let txObject = {
             nonce: nonce,
             to: config.randomNumberContractAddress,
-            gasLimit: web3.utils.toHex(estimatedGas * 2),
-            gasPrice: web3.utils.toHex(40000000000),
+            //Adjust if needed
+            gasLimit: web3.utils.toHex(estimatedGas * 10),
+            gasPrice: web3.utils.toHex(gasPrice * 10),
             value: "0x0",
             data: randomNumberContract.methods.requestRandomWords().encodeABI(),
         };
@@ -187,4 +143,32 @@ async function getRandomNumber() {
     }
 }
 
+async function createAttestation(winner) {
+
+    const eas = new EAS(config.easContractAddress);
+    const provider = ethers.getDefaultProvider(web3Url)
+    const signer = new ethers.Wallet(config.privateKey, provider);
+
+    eas.connect(signer);
+    
+    const schemaEncoder = new SchemaEncoder("bool win");
+
+    const encodedData = schemaEncoder.encodeData([
+        { name: "win", value: false, type: "bool" },
+    ]);
+
+    const tx = await eas.attest({
+        schema: config.schemaUID,
+        data: {
+            recipient: winner,
+            expirationTime: 0,
+            revocable: true,
+            data: encodedData,
+        },
+    });
+
+    const newAttestationUID = await tx.wait();
+
+    console.log("New attestation UID:", newAttestationUID);
+}
 main();
