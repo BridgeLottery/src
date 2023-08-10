@@ -1,0 +1,21 @@
+{
+    "web3Key": "APIKEY",
+    "web3Socket": "PROVIDER/$web3Key",
+
+    "contractBytecode": "CONTRACTBYTECODE",
+    "depositorContractAddress": "CONTRACTADDRESS",
+    "randomNumberContractAddress": "CONTRACTADDRESS",
+    
+    "fromAddress": "WALLET",
+    "privateKey": "PRIVATEKEY",
+
+    "yourEndpointKey": "APIKEY",
+    "yourEndpointUrl": "PROVIDER/$yourEndpointKey",
+
+    "easContractAddress": "EASCONTRACTADDRESS",
+    
+    "schemaUID": "SCHEMAUID",
+    "eventAddress": "EVENTCONTRACTADDRESS",
+    "gasLimitModifier": VALUE,
+    "gasPriceModifier": VALUE
+}
