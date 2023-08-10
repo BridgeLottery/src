@@ -33,7 +33,7 @@ let estimatedGas;
 let suggestedGasPrice;
 
 //Subscription duration
-const subscriptionDurationInSeconds = 120;
+const subscriptionDurationInSeconds = 480;
 
 //Deploy a new contract
 const deploy = async () => {
@@ -79,7 +79,6 @@ async function main() {
             if (!error) {
                 try {
                     //Recover data from the transaction
-                    console.log("test")
                     let tx = await web3Sub.eth.getTransaction(result.transactionHash);
                     //Verify that each transaction is used once
                     //Verify that the transaction have a non-zero value
@@ -164,7 +163,7 @@ async function getRandomNumber() {
 
         console.log("Random Number Transaction Receipt:", receipt);
         let RequestID = await randomNumberContract.methods.lastRequestId().call()
-        console.log(RequestID)
+        console.log("RequestID :" ,RequestID)
 
         let result = await randomNumberContract.methods.getRequestStatus(RequestID).call();
         while (!result.fulfilled) {
